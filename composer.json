@@ -1,0 +1,12 @@
+{
+    "name": "ckr/fiql-parser",
+    "description": "Library to parse a FIQL string into an abstract syntax tree",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Claudio Kressibucher",
+            "email": "ckressibucher@graphicworks.ch"
+        }
+    ],
+    "require": {}
+}
