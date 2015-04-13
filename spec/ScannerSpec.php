@@ -35,4 +35,40 @@ class ScannerSpec extends ObjectBehavior
         $exampleGroup = '(selector)';
         $this->scan($exampleGroup)->shouldBeEqualTo(['(', 'selector', ')']);
     }
+
+    function it_recognizes_an_and_operator()
+    {
+        $example = 'a;b';
+        $this->scan($example)->shouldBeEqualTo(['a', ';', 'b']);
+    }
+
+    function it_recognizes_an_or_operator()
+    {
+        $example = 'a,b';
+        $this->scan($example)->shouldBeEqualTo(['a', ',', 'b']);
+    }
+
+    function it_tokenizes_a_complex_example()
+    {
+        $example = 'abc==5;(xyz=gt=3,field!=value;(checkFlag))';
+        $this->scan($example)->shouldBeEqualTo([
+            'abc',
+            '==',
+            '5',
+            ';',
+            '(',
+            'xyz',
+            '=gt=',
+            '3',
+            ',',
+            'field',
+            '!=',
+            'value',
+            ';',
+            '(',
+            'checkFlag',
+            ')',
+            ')'
+        ]);
+    }
 }
