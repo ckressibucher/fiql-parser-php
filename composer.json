@@ -8,5 +8,18 @@
             "email": "ckressibucher@graphicworks.ch"
         }
     ],
-    "require": {}
+    "require": {},
+    "require-dev": {
+        "phpspec/phpspec": "~2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ckr\\Fiql\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "spec\\Ckr\\Fiql\\": "spec"
+        }
+    }
 }

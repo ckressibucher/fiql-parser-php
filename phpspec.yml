@@ -1,0 +1,4 @@
+suites:
+    default_suite:
+        namespace: Ckr\Fiql
+        psr4_prefix: Ckr\Fiql
