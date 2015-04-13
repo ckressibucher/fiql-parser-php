@@ -29,4 +29,10 @@ class ScannerSpec extends ObjectBehavior
         $exampleConstraint = 'a==b';
         $this->scan($exampleConstraint)->shouldBeEqualTo(['a', '==', 'b']);
     }
+
+    function it_recognizes_a_group()
+    {
+        $exampleGroup = '(selector)';
+        $this->scan($exampleGroup)->shouldBeEqualTo(['(', 'selector', ')']);
+    }
 }

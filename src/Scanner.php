@@ -193,7 +193,8 @@ class Scanner
             $this->scanExpression();
         }
         if ($isOpenGroup) {
-            $this->expect(')'); // close group
+            $regex = '\)';
+            $this->expect($regex); // close group
             $this->shiftToken();
         }
     }
@@ -228,7 +229,7 @@ class Scanner
      */
     protected function expect($regexExpected)
     {
-        $pattern = '/^(?<token>' . $regexExpected . ')';
+        $pattern = '/^(?<token>' . $regexExpected . ')/';
         if (preg_match($pattern, $this->remaining, $matches)) {
             $this->nextToken = $matches['token'];
             return;
