@@ -2,6 +2,9 @@
 
 namespace Ckr\Fiql;
 
+/**
+ * TODO decode plus and percentage encoding
+ */
 class Scanner
 {
 
@@ -37,16 +40,48 @@ class Scanner
      */
     protected static $regexPctEncoding = '%[A-Fa-f0-9]{2}';
 
+    /**
+     * Character class of special characters defined by FIQL
+     *
+     * @var string
+     */
     protected static $regexFiqlDelim = '[\!\$\'\*\+]';
 
+    /**
+     * Definition of comparision operator. This is initialized in
+     * the static `initialize` method
+     *
+     * @var string
+     */
     protected static $regexCompareOp;
 
+    /**
+     * Definition of an argument character.
+     * Initialized in the static `initialize` method.
+     *
+     * @var string
+     */
     protected static $regexArgChar;
 
+    /**
+     * Definition of an argument.
+     * Initialized in the static `initialize` method.
+     *
+     * @var string
+     */
     protected static $regexArgument;
 
     /**
-     * key: fiql comparison operator
+     * Definition of a selector.
+     * Initialized in the static `initialize` method.
+     *
+     * @var string
+     */
+    protected static $regexSelector;
+
+
+    /**
+     * key: FIQL comparison operator
      * val: arbitrary (but unique) identifier
      *
      * (this may be extended to allow additional comparison operators in theory)
@@ -62,49 +97,81 @@ class Scanner
         '=le=' => self::COMPARE_LESS_EQUAL,
     ];
 
+    /**
+     * key: FIQL logical operators
+     * val: Arbitrary identifier for that operator.
+     *
+     * @var array
+     */
     protected $logicalOperators = [
         ';' => self::OP_AND,
         ',' => self::OP_OR
     ];
 
-    protected static $regexSelector;
-
     /**
-     * Stores the last parsed token
+     * Stores the next token.
      *
      * @var string
      */
     protected $nextToken;
 
+    /**
+     * List of already parsed tokens.
+     *
+     * @var string[]
+     */
     protected $tokens;
 
+    /**
+     * @var bool
+     */
     protected static $isInitialized = false;
 
+    /**
+     * Main method to tokenize a given FIQL Expression.
+     *
+     * @param   string $queryString
+     * @return  string[]
+     * @throws  SyntaxException
+     */
     public function scan($queryString)
     {
-        self::initialize();
+        static::initialize();
         $this->remaining = $queryString;
         $this->tokens = [];
         $this->scanExpression();
+        if ($this->remaining !== '') {
+            throw new SyntaxException(
+                'Remaining string is expected to be empty after parsing the expression'
+            );
+        }
         return $this->tokens;
     }
 
+    /**
+     * Initializes combined regex patterns.
+     */
     protected static function initialize()
     {
         if (!static::$isInitialized) {
-            self::$regexSelector = '(?<selector>'
-                . '(' . self::$regexUnreserved . '|' . self::$regexPctEncoding . ')+)';
-            self::$regexCompareOp = '(?<comp_op>(=[A-Za-z]*|' . self::$regexFiqlDelim . ')=)';
+            static::$regexSelector = '(?<selector>'
+                . '(' . static::$regexUnreserved . '|' . static::$regexPctEncoding . ')+)';
+            static::$regexCompareOp = '(?<comp_op>(=[A-Za-z]*|' . static::$regexFiqlDelim . ')=)';
 
-            self::$regexArgChar = '(' . self::$regexUnreserved . '|'
-                . self::$regexPctEncoding . '|' . self::$regexFiqlDelim . '|'
+            static::$regexArgChar = '(' . static::$regexUnreserved . '|'
+                . static::$regexPctEncoding . '|' . static::$regexFiqlDelim . '|'
                 . '=)';
-            self::$regexArgument = '(?<arg>' . self::$regexArgChar . '+)';
+            static::$regexArgument = '(?<arg>' . static::$regexArgChar . '+)';
 
             static::$isInitialized = true;
         }
     }
 
+    /**
+     * Scans an expression from the beginning of the remaining string.
+     *
+     * @throws SyntaxException
+     */
     protected function scanExpression()
     {
         if ($isOpenGroup = $this->isGroupStart()) {
@@ -131,6 +198,11 @@ class Scanner
         }
     }
 
+    /**
+     * Scans a constraint from the beginning of the remaining string.
+     *
+     * @throws SyntaxException
+     */
     protected function scanConstraint()
     {
         if (!$this->isSelector()) {
@@ -147,6 +219,13 @@ class Scanner
         }
     }
 
+    /**
+     * Checks if the given regex matches the beginning of the remaining string.
+     * If so, it is set to nextToken. Otherwise, an exception is thrown.
+     *
+     * @param   string  $regexExpected
+     * @throws  SyntaxException
+     */
     protected function expect($regexExpected)
     {
         $pattern = '/^(?<token>' . $regexExpected . ')';
@@ -157,8 +236,18 @@ class Scanner
         throw new SyntaxException('Expected pattern ' . $regexExpected . ' did not match');
     }
 
+    /**
+     * Checks if the remaining string starts with a group opening parenthesis,
+     * and, if so, sets this character to `nextToken` and returns true.
+     * Otherwise, false is returned.
+     *
+     * @return bool
+     */
     protected function isGroupStart()
     {
+        if (strlen($this->remaining) === 0) {
+            return false;
+        }
         if ($this->remaining[0] === '(') {
             $this->nextToken = '(';
             return true;
@@ -166,24 +255,10 @@ class Scanner
         return false;
     }
 
-    protected function getNext()
-    {
-        if ($this->remaining === '') {
-            return false;
-        }
-        if ($this->parseSelector()) {
-            return $this->nextToken;
-        } elseif ($this->parseComparisonOperator()) {
-            return $this->nextToken;
-        } elseif ($this->parseArgument()) {
-            return $this->nextToken;
-        }
-        return false;
-    }
-
     /**
-     * Ties to parse a selector from the beginning of the remaining string.
-     * Returns true, it it succeeds, else false
+     * Tries to parse a selector from the beginning of the remaining string.
+     * Sets nextToken to the selector value and returns true, it it succeeds,
+     * else false.
      *
      * @return bool
      */
@@ -197,6 +272,12 @@ class Scanner
         return false;
     }
 
+    /**
+     * Checks if the next token is a comparison operator. Sets `nextToken`
+     * and returns true, if it is. Else, false is returned.
+     *
+     * @return bool
+     */
     protected function isComparisonOperator()
     {
         $pattern = '/^' . self::$regexCompareOp . '/';
@@ -210,8 +291,18 @@ class Scanner
         return false;
     }
 
+    /**
+     * Checks if the next token is a logical operator. If so,
+     * `nextToken` is set to the operator string, and true is
+     * returned. Otherwise, false is returned.
+     *
+     * @return bool
+     */
     protected function isLogicalOperator()
     {
+        if (strlen($this->remaining) === 0) {
+            return false;
+        }
         $operators = array_flip($this->logicalOperators);
         if (in_array($this->remaining[0], $operators)) {
             $this->nextToken = $this->remaining[0];
@@ -219,6 +310,13 @@ class Scanner
         }
     }
 
+    /**
+     * Checks if the next token is an argument. If so, `nextToken`
+     * is set to the argument value, and true is returned. Otherwise,
+     * false is returned.
+     *
+     * @return bool
+     */
     protected function isArgument()
     {
         $pattern = '/^' . self::$regexArgument . '/';
@@ -246,6 +344,10 @@ class Scanner
     {
         $idxLast = count($this->tokens) - 1;
         $len = strlen($this->tokens[$idxLast]);
-        $this->remaining = substr($this->remaining, $len);
+        if ($len === strlen($this->remaining)) {
+            $this->remaining = '';
+        } else {
+            $this->remaining = substr($this->remaining, $len);
+        }
     }
 }
