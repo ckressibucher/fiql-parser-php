@@ -4,6 +4,8 @@ namespace Ckr\Fiql;
 
 /**
  * TODO decode plus and percentage encoding
+ * TODO perform scanning iteratively instead of recursively (using a stack to keep track of the current state)
+ * TODO allow setting additional compare operators
  */
 class Scanner
 {
