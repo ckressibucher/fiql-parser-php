@@ -81,6 +81,15 @@ class ScannerSpec extends ObjectBehavior
         ]);
     }
 
+    function it_recognizes_a_wildcard_in_an_argument()
+    {
+        $example = 'a==b*';
+        $this->scan($example)->shouldBeEqualTo([
+            [Scanner::T_SELECTOR, 'a'],
+            [Scanner::T_COMP_OPERATOR, '=='],
+            [Scanner::T_ARGUMENT, 'b*'],
+        ]);
+    }
 
     function it_allows_multiple_bool_operators_without_parentheses()
     {
