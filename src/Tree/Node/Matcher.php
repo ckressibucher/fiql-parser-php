@@ -32,4 +32,14 @@ class Matcher extends AbstractNode
     {
         return $this->selector;
     }
+
+    /**
+     * Returns a unique string to identify the type of the node.
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return 'matcher';
+    }
 }
