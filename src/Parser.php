@@ -66,28 +66,54 @@ class Parser
 
     protected function parseConstraint()
     {
-        // TODO
-//        $selector = $this->tokens[$this->pointer++];
-//        list($type, $value) = $selector;
-//        $comp = $nextToken[1];
-//        $arg =
+        $selector = $this->popSelectorTokenFromStack();
+
+        $operator = $this->tokens[$this->pointer++];
+        if ($operator[0] !== Scanner::T_COMP_OPERATOR) {
+            throw new UnexpectedTokenException('Expected compare operator');
+        }
+        $argument = $this->tokens[$this->pointer++];
+        if ($argument[0] !== Scanner::T_ARGUMENT) {
+            throw new UnexpectedTokenException('Expected argument');
+        }
+        $constraint = new Node\Constraint($selector[1], $operator[1], $argument[1]);
+        $this->stack[] = $constraint;
     }
 
     protected function parseMatcher()
     {
-        $token = array_pop($this->stack);
-        if (null === $token) {
-            throw new UnexpectedTokenException('No token was found on stack. Selector token was expected.');
-        }
-        list($type, $value) = $token;
-        if ($type !== Scanner::T_SELECTOR) {
-            throw new UnexpectedTokenException('Selector token was expected');
-        }
-        $matcher = new Matcher($value);
+        $token = $this->popSelectorTokenFromStack();
+        $matcher = new Matcher($token[1]);
         $this->stack[] = $matcher;
     }
 
-    protected function getLookAhead($offset = 1)
+    /**
+     * @return array
+     * @throws UnexpectedTokenException
+     */
+    protected function popSelectorTokenFromStack()
+    {
+        $token = $this->popTokenFromStack();
+        if ($token[0] !== Scanner::T_SELECTOR) {
+            throw new UnexpectedTokenException('Selector token was expected');
+        }
+        return $token;
+    }
+
+    /**
+     * @return array
+     * @throws UnexpectedTokenException
+     */
+    protected function popTokenFromStack()
+    {
+        $token = array_pop($this->stack);
+        if (null === $token || !is_array($token)) {
+            throw new UnexpectedTokenException('No token was found on stack. Selector token was expected.');
+        }
+        return $token;
+    }
+
+    protected function getLookAhead($offset = 0)
     {
         if (isset($this->tokens[$this->pointer + $offset])) {
             return $this->tokens[$this->pointer + $offset];

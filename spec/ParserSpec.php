@@ -24,6 +24,14 @@ class ParserSpec extends ObjectBehavior
         $this->parse($scanner, $expr)->shouldBeEqualToTree($expected);
     }
 
+    function it_creates_a_constraint_expression()
+    {
+        $expr = 'my%20field=lt=the%20value';
+        $scanner = new Scanner();
+        $expected = new Constraint('my field', '=lt=', 'the value');
+        $this->parse($scanner, $expr)->shouldBeEqualToTree($expected);
+    }
+
     public function getMatchers()
     {
         return [
@@ -39,7 +47,7 @@ class ParserSpec extends ObjectBehavior
                 $printer->reset();
                 $expected->accept($printer);
                 $expectedText = $printer->getText();
-                
+
                 return $actualText === $expectedText;
             }
         ];
