@@ -3,9 +3,7 @@
 namespace Ckr\Fiql;
 
 /**
- * TODO decode plus and percentage encoding
- * TODO perform scanning iteratively instead of recursively (using a stack to keep track of the current state)
- * TODO allow setting additional compare operators
+ * TODO allow setting additional compare operators (e.g. regex)
  */
 class Scanner
 {
@@ -171,10 +169,12 @@ class Scanner
             list($pre, $selector, $compOp, $arg, $post) = $this->matchConstraint($queryString);
             $this->processPreamble($pre);
             if ($selector) {
+                $selector = $this->decodeHex($selector);
                 $this->tokens[] = [self::T_SELECTOR, $selector];
             }
             if ($compOp) {
                 $this->tokens[] = [self::T_COMP_OPERATOR, $compOp];
+                $arg = $this->decodeHex($arg);
                 $this->tokens[] = [self::T_ARGUMENT, $arg];
             }
             $queryString = $post;
@@ -250,6 +250,14 @@ class Scanner
                     new SyntaxException();
             }
         }
+    }
+
+    protected function decodeHex($input)
+    {
+        $decoded = preg_replace_callback('|%([0-9A-Fa-f]{2})|', function($m) {
+            return chr(hexdec($m[1]));
+        }, $input);
+        return $decoded;
     }
 
 }

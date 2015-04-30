@@ -91,6 +91,46 @@ class ScannerSpec extends ObjectBehavior
         ]);
     }
 
+    function it_handles_percentage_encoding()
+    {
+        $example = 'foo%24==bar';
+        $this->scan($example)->shouldBeEqualTo([
+            [Scanner::T_SELECTOR, 'foo$'],
+            [Scanner::T_COMP_OPERATOR, '=='],
+            [Scanner::T_ARGUMENT, 'bar']
+        ]);
+    }
+
+    function it_handles_lowercase_hexcodes()
+    {
+        $example = 'foo==bar%2bmore';
+        $this->scan($example)->shouldBeEqualTo([
+            [Scanner::T_SELECTOR, 'foo'],
+            [Scanner::T_COMP_OPERATOR, '=='],
+            [Scanner::T_ARGUMENT, 'bar+more']
+        ]);
+    }
+
+    function it_handles_uppercase_hexcodes()
+    {
+        $example = 'foo==bar%2Bmore';
+        $this->scan($example)->shouldBeEqualTo([
+            [Scanner::T_SELECTOR, 'foo'],
+            [Scanner::T_COMP_OPERATOR, '=='],
+            [Scanner::T_ARGUMENT, 'bar+more']
+        ]);
+    }
+
+    function it_handles_multiple_percentage_encodings()
+    {
+        $example = 'foo==bar%2Bmore%3Dfoomore';
+        $this->scan($example)->shouldBeEqualTo([
+            [Scanner::T_SELECTOR, 'foo'],
+            [Scanner::T_COMP_OPERATOR, '=='],
+            [Scanner::T_ARGUMENT, 'bar+more=foomore']
+        ]);
+    }
+
     function it_allows_multiple_bool_operators_without_parentheses()
     {
         $source = 'a;b;c==5';
