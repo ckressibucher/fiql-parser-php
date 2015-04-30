@@ -6,7 +6,6 @@ use Ckr\Fiql\Parser\ParseException;
 use Ckr\Fiql\Parser\UnexpectedTokenException;
 use Ckr\Fiql\Tree\Node;
 use Ckr\Fiql\Tree\Node\Matcher;
-use Ckr\Fiql\Tree\Operator;
 
 class Parser
 {
@@ -20,8 +19,6 @@ class Parser
 
     protected $stack;
 
-    protected $currentToken;
-
     protected $scanner;
 
     /**
@@ -33,7 +30,6 @@ class Parser
     }
 
     /**
-     * @param Scanner $scanner
      * @param $queryString
      *
      * @return Tree\Node;
@@ -51,8 +47,8 @@ class Parser
             throw new ParseException('Syntax exception was detected during parsing', 0, $e);
         }
 
-        $this->next();
-        $this->parseExpr();
+        $this->parseOrExpr();
+
         if (count($this->stack) !== 1) {
             throw new ParseException('Unexpected number of elements on stack after parsing');
         }
@@ -63,14 +59,69 @@ class Parser
         return $node;
     }
 
-    protected function parseExpr()
+    protected function parseOrExpr()
     {
-        $token = end($this->stack);
+        $this->parseAndExpr();
+        while ($this->pointer < count($this->tokens)) {
+            $nextToken = $this->getLookAhead();
+            if ($nextToken[0] === Scanner::T_GROUP_END) {
+                break;
+            }
+            if ($nextToken[0] !== Scanner::T_BOOL_OPERATOR || $nextToken[1] !== ',') {
+                throw new UnexpectedTokenException('Expected OR operator');
+            }
+            $this->next(); // add OR operator to stack
+            $this->parseAndExpr();
+
+            $right = array_pop($this->stack);
+            array_pop($this->stack); // operator: OR
+            $left = array_pop($this->stack);
+            $expr = new Node\BoolExpr($left, '||', $right);
+            $this->stack[] = $expr;
+        }
+    }
+
+    protected function parseAndExpr()
+    {
+        $this->parseSimpleExpr();
+        while($this->pointer < count($this->tokens)) {
+            $nextToken = $this->getLookAhead();
+            if ($nextToken[0] === Scanner::T_GROUP_END) {
+                break;
+            }
+            if ($nextToken[0] !== Scanner::T_BOOL_OPERATOR) {
+                throw new UnexpectedTokenException('Expected boolean operator');
+            }
+            if ($nextToken[1] === ',') { // or operator: ends and operation
+                break;
+            } else { // and
+                $this->next(); // add AND operator to stack
+                $this->parseSimpleExpr();
+
+                $right = array_pop($this->stack);
+                array_pop($this->stack); // operator: AND
+                $left = array_pop($this->stack);
+                $expr = new Node\BoolExpr($left, '&&', $right);
+                $this->stack[] = $expr;
+            }
+        }
+    }
+
+    protected function parseSimpleExpr()
+    {
+        $token = $this->getLookAhead();
         switch ($token[0]) {
             case Scanner::T_GROUP_START:
-                $this->parseGroupedExpression();
+                $this->next();
+                $this->parseOrExpr();
+                $this->expectType(Scanner::T_GROUP_END);
+                array_pop($this->stack);
+                $expr = array_pop($this->stack);
+                array_pop($this->stack);
+                array_push($this->stack, $expr);
                 break;
             case Scanner::T_SELECTOR:
+                $this->next();
                 $nextToken = $this->getLookAhead();
                 if ($nextToken && $nextToken[0] === Scanner::T_COMP_OPERATOR) {
                     $this->parseConstraint();
@@ -104,14 +155,6 @@ class Parser
         $token = $this->popSelectorTokenFromStack();
         $matcher = new Matcher($token[1]);
         $this->stack[] = $matcher;
-    }
-
-    protected function parseGroupedExpression()
-    {
-        $this->popGroupStartTokenFromStack();
-        $this->next();
-        $this->parseExpr();
-        $this->expectType(Scanner::T_GROUP_END);
     }
 
     /**
@@ -167,17 +210,16 @@ class Parser
     }
 
     /**
-     * Advances the pointer, and checks if the retrieved token is of the expected type.
+     * Push next token to stack and checks its type.
+     * Advances the pointer.
      *
      * @param int $type
      * @throws UnexpectedTokenException
      */
     protected function expectType($type)
     {
-        if (!isset($this->tokens[$this->pointer])) {
-            throw new UnexpectedTokenException('Expected additional tokens.');
-        }
-        $token = $this->tokens[$this->pointer++];
+        $this->next();
+        $token = end($this->stack);
         if ($token[0] !== $type) {
             throw new UnexpectedTokenException('Token of type ' . $type . ' was expected.');
         }

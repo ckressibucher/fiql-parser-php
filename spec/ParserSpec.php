@@ -3,6 +3,7 @@
 namespace spec\Ckr\Fiql;
 
 use Ckr\Fiql\Scanner;
+use Ckr\Fiql\Tree\Node\BoolExpr;
 use Ckr\Fiql\Tree\Node\Constraint;
 use Ckr\Fiql\Tree\Node\Matcher;
 use Ckr\Fiql\Visitor\Printer;
@@ -49,6 +50,48 @@ class ParserSpec extends ObjectBehavior
     {
         $expr = '((my_field)';
         $this->shouldThrow('Ckr\Fiql\Parser\ParseException')->during('parse', array($expr));
+    }
+
+    function it_creates_a_bool_expression()
+    {
+        $expr = 'a;b';
+        $expected = new BoolExpr(new Matcher('a'), '&&', new Matcher('b'));
+        $this->parse($expr)->shouldBeEqualToTree($expected);
+    }
+
+    function it_considers_precedence_for_bool_expressions()
+    {
+        $expr = 'a,b;c';
+        $expected = new BoolExpr(
+            new Matcher('a'),
+            '||',
+            new BoolExpr(new Matcher('b'), '&&', new Matcher('c'))
+        );
+        $this->parse($expr)->shouldBeEqualToTree($expected);
+    }
+
+    function it_allows_custom_precedence_by_grouping()
+    {
+        $expr = '(a,b);c';
+        $expected = new BoolExpr(
+            new BoolExpr(new Matcher('a'), '||', new Matcher('b')),
+            '&&',
+            new Matcher('c')
+        );
+        $this->parse($expr)->shouldBeEqualToTree($expected);
+    }
+
+    function it_allows_nested_grouping()
+    {
+        $expr = 'z,(a,(b,c))';
+        $left = new Matcher('z');
+        $right = new BoolExpr(
+            new Matcher('a'),
+            '||',
+            new BoolExpr(new Matcher('b'), '||', new Matcher('c'))
+        );
+        $expected = new BoolExpr($left, '||', $right);
+        $this->parse($expr)->shouldBeEqualToTree($expected);
     }
 
     public function getMatchers()
