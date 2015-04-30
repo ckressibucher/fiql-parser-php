@@ -12,9 +12,24 @@ use Ckr\Fiql\Tree\Node;
 class Matcher extends AbstractNode
 {
 
-    public function __toString()
+    /**
+     * @var string
+     */
+    private $selector;
+
+    /**
+     * @param string $selector
+     */
+    public function __construct($selector)
     {
-        // TODO: Implement __toString() method.
-        return '';
+        $this->selector = $selector;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSelector()
+    {
+        return $this->selector;
     }
 }

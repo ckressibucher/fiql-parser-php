@@ -2,6 +2,6 @@
 
 namespace Ckr\Fiql\Tree\Node;
 
-class BoolExpr extends Dyadic
+class BoolExpr extends DyadicExpr
 {
 }
