@@ -22,6 +22,16 @@ class Parser
 
     protected $currentToken;
 
+    protected $scanner;
+
+    /**
+     * @param Scanner $scanner
+     */
+    public function __construct(Scanner $scanner)
+    {
+        $this->scanner = $scanner;
+    }
+
     /**
      * @param Scanner $scanner
      * @param $queryString
@@ -31,12 +41,12 @@ class Parser
      * @throws ParseException
      * @throws UnexpectedTokenException
      */
-    public function parse(Scanner $scanner, $queryString)
+    public function parse($queryString)
     {
         $this->stack = [];
         $this->pointer = 0;
         try {
-            $this->tokens = $scanner->scan($queryString);
+            $this->tokens = $this->scanner->scan($queryString);
         } catch (SyntaxException $e) {
             throw new ParseException('Syntax exception was detected during parsing', 0, $e);
         }

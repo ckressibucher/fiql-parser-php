@@ -11,6 +11,14 @@ use Prophecy\Argument;
 
 class ParserSpec extends ObjectBehavior
 {
+
+    function let()
+    {
+        $scanner = new Scanner();
+        $this->beConstructedWith($scanner);
+    }
+
+
     function it_is_initializable()
     {
         $this->shouldHaveType('Ckr\Fiql\Parser');
@@ -19,32 +27,28 @@ class ParserSpec extends ObjectBehavior
     function it_creates_a_matcher_expression()
     {
         $expr = 'field';
-        $scanner = new Scanner();
         $expected = new Matcher('field');
-        $this->parse($scanner, $expr)->shouldBeEqualToTree($expected);
+        $this->parse($expr)->shouldBeEqualToTree($expected);
     }
 
     function it_creates_a_constraint_expression()
     {
         $expr = 'my%20field=lt=the%20value';
-        $scanner = new Scanner();
         $expected = new Constraint('my field', '=lt=', 'the value');
-        $this->parse($scanner, $expr)->shouldBeEqualToTree($expected);
+        $this->parse($expr)->shouldBeEqualToTree($expected);
     }
 
     function it_handles_grouped_expressions()
     {
         $expr = '((my_field))';
-        $scanner = new Scanner();
         $expected = new Matcher('my_field');
-        $this->parse($scanner, $expr)->shouldBeEqualToTree($expected);
+        $this->parse($expr)->shouldBeEqualToTree($expected);
     }
 
     function it_checks_correct_number_of_grouping_parenthesis()
     {
         $expr = '((my_field)';
-        $scanner = new Scanner();
-        $this->shouldThrow('Ckr\Fiql\Parser\ParseException')->during('parse', array($scanner, $expr));
+        $this->shouldThrow('Ckr\Fiql\Parser\ParseException')->during('parse', array($expr));
     }
 
     public function getMatchers()
