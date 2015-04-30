@@ -32,6 +32,21 @@ class ParserSpec extends ObjectBehavior
         $this->parse($scanner, $expr)->shouldBeEqualToTree($expected);
     }
 
+    function it_handles_grouped_expressions()
+    {
+        $expr = '((my_field))';
+        $scanner = new Scanner();
+        $expected = new Matcher('my_field');
+        $this->parse($scanner, $expr)->shouldBeEqualToTree($expected);
+    }
+
+    function it_checks_correct_number_of_grouping_parenthesis()
+    {
+        $expr = '((my_field)';
+        $scanner = new Scanner();
+        $this->shouldThrow('Ckr\Fiql\Parser\ParseException')->during('parse', array($scanner, $expr));
+    }
+
     public function getMatchers()
     {
         return [

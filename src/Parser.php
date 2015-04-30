@@ -22,15 +22,27 @@ class Parser
 
     protected $currentToken;
 
+    /**
+     * @param Scanner $scanner
+     * @param $queryString
+     *
+     * @return Tree\Node;
+     *
+     * @throws ParseException
+     * @throws UnexpectedTokenException
+     */
     public function parse(Scanner $scanner, $queryString)
     {
         $this->stack = [];
         $this->pointer = 0;
-        $this->tokens = $scanner->scan($queryString);
+        try {
+            $this->tokens = $scanner->scan($queryString);
+        } catch (SyntaxException $e) {
+            throw new ParseException('Syntax exception was detected during parsing', 0, $e);
+        }
 
-        $this->stack[] = $this->tokens[$this->pointer++];
+        $this->next();
         $this->parseExpr();
-
         if (count($this->stack) !== 1) {
             throw new ParseException('Unexpected number of elements on stack after parsing');
         }
@@ -46,10 +58,7 @@ class Parser
         $token = end($this->stack);
         switch ($token[0]) {
             case Scanner::T_GROUP_START:
-                // TODO
-                break;
-            case Scanner::T_GROUP_END:
-                // TODO
+                $this->parseGroupedExpression();
                 break;
             case Scanner::T_SELECTOR:
                 $nextToken = $this->getLookAhead();
@@ -87,6 +96,14 @@ class Parser
         $this->stack[] = $matcher;
     }
 
+    protected function parseGroupedExpression()
+    {
+        $this->popGroupStartTokenFromStack();
+        $this->next();
+        $this->parseExpr();
+        $this->expectType(Scanner::T_GROUP_END);
+    }
+
     /**
      * @return array
      * @throws UnexpectedTokenException
@@ -104,6 +121,19 @@ class Parser
      * @return array
      * @throws UnexpectedTokenException
      */
+    protected function popGroupStartTokenFromStack()
+    {
+        $token = $this->popTokenFromStack();
+        if ($token[0] !== Scanner::T_GROUP_START) {
+            throw new UnexpectedTokenException('Group start token was expected');
+        }
+        return $token;
+    }
+
+    /**
+     * @return array
+     * @throws UnexpectedTokenException
+     */
     protected function popTokenFromStack()
     {
         $token = array_pop($this->stack);
@@ -113,6 +143,42 @@ class Parser
         return $token;
     }
 
+    /**
+     * Get next token and push it to the stack. Advance the pointer.
+     *
+     * @throws UnexpectedTokenException
+     */
+    protected function next()
+    {
+        if (!isset($this->tokens[$this->pointer])) {
+            throw new UnexpectedTokenException('Expected additional tokens.');
+        }
+        $this->stack[] = $this->tokens[$this->pointer++];
+    }
+
+    /**
+     * Advances the pointer, and checks if the retrieved token is of the expected type.
+     *
+     * @param int $type
+     * @throws UnexpectedTokenException
+     */
+    protected function expectType($type)
+    {
+        if (!isset($this->tokens[$this->pointer])) {
+            throw new UnexpectedTokenException('Expected additional tokens.');
+        }
+        $token = $this->tokens[$this->pointer++];
+        if ($token[0] !== $type) {
+            throw new UnexpectedTokenException('Token of type ' . $type . ' was expected.');
+        }
+    }
+
+    /**
+     * Return a lookahead token without advancing the pointer
+     *
+     * @param int $offset
+     * @return bool
+     */
     protected function getLookAhead($offset = 0)
     {
         if (isset($this->tokens[$this->pointer + $offset])) {
