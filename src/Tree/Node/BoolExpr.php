@@ -2,7 +2,7 @@
 
 namespace Ckr\Fiql\Tree\Node;
 
-class BoolExpr extends DyadicExpr
+class BoolExpr extends AbstractNode
 {
     /**
      * {@inheritDoc}
