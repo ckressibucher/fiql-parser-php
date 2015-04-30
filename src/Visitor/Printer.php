@@ -17,11 +17,16 @@ class Printer implements Visitor
         if ($node instanceof Node\Matcher) {
             $repr = 'selector=' . $node->getSelector();
         }
-        $this->text .= $type . ':' . $repr;
+        $this->text = (isset($this->text) ? $this->text : '') . $type . ':' . $repr;
     }
 
     public function getText()
     {
-        return $this->text;
+        return isset($this->text) ? $this->text : '';
+    }
+
+    public function reset()
+    {
+        unset($this->text);
     }
 }

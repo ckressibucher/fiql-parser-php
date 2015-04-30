@@ -4,6 +4,8 @@ namespace spec\Ckr\Fiql;
 
 use Ckr\Fiql\Scanner;
 use Ckr\Fiql\Tree\Node\Constraint;
+use Ckr\Fiql\Tree\Node\Matcher;
+use Ckr\Fiql\Visitor\Printer;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -14,20 +16,32 @@ class ParserSpec extends ObjectBehavior
         $this->shouldHaveType('Ckr\Fiql\Parser');
     }
 
-//    function it_creates_a_constraint_expression()
-//    {
-//        $expr = 'field==val';
-//        $scanner = new Scanner($expr);
-//
-//        $expected = new Constraint();
-//
-//        $this->parse($scanner)->should
-//    }
-//
-//    public function getMatchers()
-//    {
-//        return [
-//            'compareTreeTo' => function($expected, $actual) {}
-//        ];
-//    }
+    function it_creates_a_matcher_expression()
+    {
+        $expr = 'field';
+        $scanner = new Scanner();
+        $expected = new Matcher('field');
+        $this->parse($scanner, $expr)->shouldBeEqualToTree($expected);
+    }
+
+    public function getMatchers()
+    {
+        return [
+            'beEqualToTree' => function($subject, $expected) {
+                if ($subject->getType() !== $expected->getType()) {
+                    return false;
+                }
+
+                $printer = new Printer();
+                $subject->accept($printer);
+                $actualText = $printer->getText();
+
+                $printer->reset();
+                $expected->accept($printer);
+                $expectedText = $printer->getText();
+                
+                return $actualText === $expectedText;
+            }
+        ];
+    }
 }

@@ -25,4 +25,12 @@ class PrinterSpec extends ObjectBehavior
 
         $this->getText()->shouldReturn('matcher:selector=field');
     }
+
+    function it_should_be_resettable()
+    {
+        $matcher = new Matcher('a');
+        $this->visit($matcher);
+        $this->reset();
+        $this->getText()->shouldReturn('');
+    }
 }
