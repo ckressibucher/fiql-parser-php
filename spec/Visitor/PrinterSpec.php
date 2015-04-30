@@ -2,6 +2,7 @@
 
 namespace spec\Ckr\Fiql\Visitor;
 
+use Ckr\Fiql\Tree\Node\Constraint;
 use Ckr\Fiql\Tree\Node\Matcher;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
@@ -23,7 +24,15 @@ class PrinterSpec extends ObjectBehavior
         $matcher = new Matcher('field');
         $this->visit($matcher);
 
-        $this->getText()->shouldReturn('matcher:selector=field');
+        $this->getText()->shouldReturn('matcher:field');
+    }
+
+    function it_should_return_type_and_expression_of_a_constraint_node()
+    {
+        $constraint = new Constraint('field', '=lt=', 'value');
+        $this->visit($constraint);
+
+        $this->getText()->shouldReturn('constraint:field=lt=value');
     }
 
     function it_should_be_resettable()

@@ -15,7 +15,9 @@ class Printer implements Visitor
         $type = $node->getType();
         $repr = 'UNKNOWN';
         if ($node instanceof Node\Matcher) {
-            $repr = 'selector=' . $node->getSelector();
+            $repr = $node->getSelector();
+        } elseif ($node instanceof Node\Constraint) {
+            $repr = $node->getField() . $node->getOperator() . $node->getArgument();
         }
         $this->text = (isset($this->text) ? $this->text : '') . $type . ':' . $repr;
     }
