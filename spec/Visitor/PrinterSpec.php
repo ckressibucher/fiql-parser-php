@@ -18,8 +18,11 @@ class PrinterSpec extends ObjectBehavior
         $this->shouldHaveType('Ckr\Fiql\Tree\Visitor');
     }
 
-    function it_should_type_and_selector_of_a_matcher_node()
+    function it_should_return_type_and_selector_of_a_matcher_node()
     {
         $matcher = new Matcher('field');
+        $this->visit($matcher);
+
+        $this->getText()->shouldReturn('matcher:selector=field');
     }
 }
