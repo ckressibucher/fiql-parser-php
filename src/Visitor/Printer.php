@@ -10,16 +10,29 @@ class Printer implements Visitor
 
     private $text;
 
+    private $level = 0;
+
     public function visit(Node $node)
     {
-        $type = $node->getType();
-        $repr = 'UNKNOWN';
-        if ($node instanceof Node\Matcher) {
-            $repr = $node->getSelector();
-        } elseif ($node instanceof Node\Constraint) {
-            $repr = $node->getField() . $node->getOperator() . $node->getArgument();
+        if (!isset($this->text)) {
+            $this->text = '';
         }
-        $this->text = (isset($this->text) ? $this->text : '') . $type . ':' . $repr;
+        for ($i = 0; $i < $this->level; $i++) {
+            $this->text .= "\t";
+        }
+        $this->text .= $node->getType() . ':';
+        if ($node instanceof Node\Matcher) {
+            $this->text .= $node->getSelector();
+        } elseif ($node instanceof Node\Constraint) {
+            $this->text .= $node->getField() . $node->getOperator() . $node->getArgument();
+        } elseif ($node instanceof Node\BoolExpr) {
+            $this->text .= $node->getOperator() . "\n";
+            $this->level++;
+            $this->visit($node->getLeftOperand());
+            $this->text .= "\n";
+            $this->visit($node->getRightOperand());
+            $this->level--;
+        }
     }
 
     public function getText()

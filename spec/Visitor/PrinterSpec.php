@@ -2,6 +2,7 @@
 
 namespace spec\Ckr\Fiql\Visitor;
 
+use Ckr\Fiql\Tree\Node\BoolExpr;
 use Ckr\Fiql\Tree\Node\Constraint;
 use Ckr\Fiql\Tree\Node\Matcher;
 use PhpSpec\ObjectBehavior;
@@ -33,6 +34,28 @@ class PrinterSpec extends ObjectBehavior
         $this->visit($constraint);
 
         $this->getText()->shouldReturn('constraint:field=lt=value');
+    }
+
+    function it_should_return_operator_and_operands_of_boolean_expression()
+    {
+        $left = new Matcher('field_a');
+        $right = new Matcher('field_b');
+        $boolExpr = new BoolExpr($left, '||', $right);
+        $this->visit($boolExpr);
+
+        $this->getText()->shouldReturn("bool_expr:||\n\tmatcher:field_a\n\tmatcher:field_b");
+    }
+
+    function it_should_print_nested_bool_expressions()
+    {
+        $a = new Matcher('a');
+        $b = new Matcher('b');
+        $c = new Matcher('c');
+        $subExpr = new BoolExpr($a, '&&', $b);
+        $expr = new BoolExpr($subExpr, '||', $c);
+        $this->visit($expr);
+
+        $this->getText()->shouldReturn("bool_expr:||\n\tbool_expr:&&\n\t\tmatcher:a\n\t\tmatcher:b\n\tmatcher:c");
     }
 
     function it_should_be_resettable()
