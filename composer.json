@@ -8,7 +8,9 @@
             "email": "ckressibucher@graphicworks.ch"
         }
     ],
-    "require": {},
+    "require": {
+        "php": ">=5.4"
+    },
     "require-dev": {
         "phpspec/phpspec": "~2.1"
     },

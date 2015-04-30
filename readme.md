@@ -8,6 +8,12 @@ The parser creates a syntax tree from a string expression in the Feed Item Query
 *Note that this library is not yet stable enough for production usage*. If you find a bug, please
 help by creating an issue on github.
 
+Requirements
+------------
+
+This library currently does not use any third party dependencies. A PHP version >= 5.4 is required.
+For testing, phpspec is used.
+
 Basic Usage
 -----------
 
