@@ -14,6 +14,8 @@ Requirements
 This library currently does not use any third party dependencies. A PHP version >= 5.4 is required.
 For testing, phpspec is used.
 
+[![Build Status](https://travis-ci.org/ckressibucher/fiql-parser-php.svg?branch=master)](https://travis-ci.org/ckressibucher/fiql-parser-php)
+
 Basic Usage
 -----------
 
