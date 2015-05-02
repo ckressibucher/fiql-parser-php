@@ -5,6 +5,7 @@ namespace spec\Ckr\Fiql\Visitor;
 use Ckr\Fiql\Tree\Node\BoolExpr;
 use Ckr\Fiql\Tree\Node\Constraint;
 use Ckr\Fiql\Tree\Node\Matcher;
+use Ckr\Fiql\Tree\Node\TrueExpr;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -18,6 +19,14 @@ class PrinterSpec extends ObjectBehavior
     function it_should_implement_visitor()
     {
         $this->shouldHaveType('Ckr\Fiql\Tree\Visitor');
+    }
+
+    function it_should_return_type_of_a_trueExpr_node()
+    {
+        $node = new TrueExpr();
+        $this->visit($node);
+
+        $this->getText()->shouldReturn('true:');
     }
 
     function it_should_return_type_and_selector_of_a_matcher_node()
