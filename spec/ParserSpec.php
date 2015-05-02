@@ -6,6 +6,7 @@ use Ckr\Fiql\Scanner;
 use Ckr\Fiql\Tree\Node\BoolExpr;
 use Ckr\Fiql\Tree\Node\Constraint;
 use Ckr\Fiql\Tree\Node\Matcher;
+use Ckr\Fiql\Tree\Node\TrueExpr;
 use Ckr\Fiql\Visitor\Printer;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
@@ -23,6 +24,13 @@ class ParserSpec extends ObjectBehavior
     function it_is_initializable()
     {
         $this->shouldHaveType('Ckr\Fiql\Parser');
+    }
+
+    function it_creates_a_true_expression_from_an_empty_input_string()
+    {
+        $expr = '';
+        $expected = new TrueExpr();
+        $this->parse($expr)->shouldBeEqualToTree($expected);
     }
 
     function it_creates_a_matcher_expression()

@@ -20,6 +20,11 @@ class ScannerSpec extends ObjectBehavior
         ]);
     }
 
+    function it_converts_an_empty_string_to_an_empty_array()
+    {
+        $this->scan('')->shouldBeEqualTo([]);
+    }
+
     function it_recognizes_a_selector()
     {
         /* @see https://tools.ietf.org/html/rfc3986#section-2.3 */

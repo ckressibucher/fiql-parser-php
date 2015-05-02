@@ -47,7 +47,7 @@ class Parser
             throw new ParseException('Syntax exception was detected during parsing', 0, $e);
         }
 
-        $this->parseOrExpr();
+        $this->doParse();
 
         if (count($this->stack) !== 1) {
             throw new ParseException('Unexpected number of elements on stack after parsing');
@@ -57,6 +57,16 @@ class Parser
             throw new ParseException('Unexpected value on stack after parsing: expected a node');
         }
         return $node;
+    }
+
+    protected function doParse()
+    {
+        if (count($this->tokens) === 0) {
+            // empty expression, generate a single true node (no filter => return all items)
+            $this->stack[] = new Node\TrueExpr();
+        } else {
+            $this->parseOrExpr();
+        }
     }
 
     protected function parseOrExpr()
